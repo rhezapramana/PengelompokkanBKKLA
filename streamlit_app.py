@@ -24,7 +24,7 @@ if 'df1' not in state:
 if 'dataset' not in state:
    state['dataset'] = pd.DataFrame()
 
-# Fungsi judul halaman
+# Fungsi judul halaman  
 def judul_halaman(header, subheader):
     nama_app = f"Aplikasi {header} Pengelompokkan Kemampuan Kompetensi BKKLA"
     st.title(nama_app)
@@ -54,16 +54,18 @@ def import_data():
                                          'f1767':'Penggunaan_Teknologi_Informasi',
                                          'f1769':'Komunikasi','f1771':'Kerjasama_Tim',
                                          'f1773':'Pengembangan_Diri'})
+            kolomdanbaris = df2.shape
         
             # Menampilkan pesan sukses
-            st.success("Import data berhasil!")
+            st.success("Import Data Berhasil")
 
             # Menampilkan tabel hasil penggabungan di Streamlit
+            st.write('Dari data di dapatkan ', df2.shape[0],' Baris dan ', df2.shape[1],' Kolom')
             state['dataset'] = df2
 
-        except Exception as e:
+        except(TypeError, IndexError, KeyError):
             # Menampilkan pesan kesalahan jika terjadi masalah saat mengimpor data
-            st.error("Terjadi kesalahan saat mengimpor data: " + str(e))
+            st.error("Data yang diupload tidak sesuai")
 
 # Fungsi untuk melakukan cleaning data
 def preprocessing_data():
@@ -298,9 +300,8 @@ def preprocessing_data():
 
         # Mereset index
         state['dataset'].reset_index(inplace=True, drop=True)
+        st.success("Nilai Null Berhasil Dihapus!")
         st.dataframe(state['dataset'])
-
-        st.success("Nilai null berhasil dihapus!")
     else:
         #st.warning("Tidak ada data yang diupload atau data kosong")
         st.error('Gaada')
@@ -318,8 +319,8 @@ def show_null_count():
 # Fungsi DBI
 def DBI():
     if not state['dataset'].empty:
-
         # Memilih Atribut yang ingin digunakan pada DBI
+        df1 = 2
         state['x'] = state['dataset'].iloc[:,4:13]
         scaler = StandardScaler()
         data1_scaled = scaler.fit_transform(state['x'])
@@ -328,144 +329,145 @@ def DBI():
         # Perhitungan Evaluasi DBI
         result2 = {}
 
-        for i in range(2, 5):
+        for i in range(2, 10):
             kmeans = KMeans(n_clusters=i, random_state=30)
             labels = kmeans.fit_predict(data1_scaled)
             db_index = davies_bouldin_score(data1_scaled, labels)
             result2.update({i: db_index})
-
         result3 = pd.DataFrame(result2.values(), result2.keys())
-        result4 = result3.rename(columns={0: "Hasil Evaluasi DBI"})
-        
-        #df = result1.idxmin()
+        df = result3.idxmin().min()
 
-        state["result5"] = result4
-        #state['df'] = df
-    
-        #st.table(state['result1'])
-        teks0 = f"Dari data didapatkan rekomendasi pengelompokkan sebanyak 2"
-        st.write(teks0)
+        st.write("Dari data didapatkan rekomendasi pengelompokkan sebanyak ",df1," Kelompok") 
+     
         
 
 # Fungsi Clustering Data
 def clustering_data(input_c):
         try:
+            state['dfi'] = {}
+            state['clustering'] = {}
+
             state['clustering'] = state['dataset'].copy()
-            state['x'] = state['dataset'].iloc[:, 4:13]
+            state['x'] = state['clustering'].iloc[:, 4:13]
             algorithm = (KMeans(n_clusters = input_c, init='k-means++', random_state= 111, algorithm='elkan'))
             state['algoritma'] = algorithm.fit_predict(state['x'])
 
-        except(ValueError):
-            st.error("Nilai rentang cluster tidak valid atau terdapat nilai null pada data")
+        except (ValueError, IndexError, OverflowError):
+            st.error("Nilai Jumlah Cluster Tidak Valid")
 
-def show_cluster():
+
+def show_cluster(input_c):
         try:
-            def ubah_Cluster(x):
-                if x == 0:
-                    return 1
-                elif x == 1:
-                     return 2
-                elif x == 2:
-                    return 3
-                elif x == 3:
-                     return 4
-                elif x == 4:
-                     return 5
-                elif x == 5:
-                     return 6
-                elif x == 6:
-                    return 7
-                elif x == 7:
-                     return 8
-                elif x == 8:
-                     return 9
-                elif x == 9:
-                     return 10
-            
+
             state['clustering']['Kelompok'] = pd.DataFrame(state['algoritma'])
-            state['clustering']['Kelompok'] = state['clustering']['Kelompok'].apply(ubah_Cluster)
+            state['clustering']['Kelompok'] = state['clustering']['Kelompok']+1
             state['clustering'] = state['clustering'].sort_values(by='Prodi')
             state['clustering'] = state['clustering'].reset_index(drop=True)
 
-            df4 = state['clustering'][state['clustering']['Kelompok'] == 1]
-            df5 = state['clustering'][state['clustering']['Kelompok'] == 2]
+            state['dfi'] = {}
+            state['ratadata'] = {}
+            state['rekomendasi'] = {}
+            state['datarekomendasi'] = {}
 
-            data3 = df4[['Etika','Bahasa_Inggris','Keahlian_Bidang_Ilmu','Penggunaan_Teknologi_Informasi','Komunikasi','Kerjasama_Tim','Pengembangan_Diri']]
-            data4 = df5[['Etika','Bahasa_Inggris','Keahlian_Bidang_Ilmu','Penggunaan_Teknologi_Informasi','Komunikasi','Kerjasama_Tim','Pengembangan_Diri']]
+            for i in range(1,input_c+1):
+                state['dfi']["clustering{0}".format(i)] = state['clustering'].loc[state['clustering']['Kelompok'] == i+1-1]
 
-            frame = {}
-            frame1 = {} 
+                state['dfi']["clustering"+str(i+1-1)] = state['dfi']["clustering"+str(i+1-1)].reset_index(drop=True)
+                state['dfi']["clustering"+str(i+1-1)].index += 1
+                
+                st.write('**Kelompok** ' + str(i))
+                st.dataframe(state['dfi']["clustering"+str(i+1-1)])
 
-            for x in data3:
-                frame[x] = np.round(np.average(data3[x]),2)
-            dataf1 = pd.DataFrame(frame, index=[1])
-            df_label1 = dataf1.apply(min, axis=0)
-            teks1 = f'Atribut yang memiliki nilai rata-rata terendah adalah kemampuan kompetensi {df_label1.idxmin()} dengan nilai {df_label1.min()}. Ini bisa menjadi langkah untuk BKKLA dalam mencari pelatihan yang sesuai dengan kompetensi alumni dan bisa juga menjadi masukan untuk prodi dalam meningkatkan mata kuliah yang dirasa kurang berdasarkan data RKA'
-
-            for x in data4:
-                frame1[x] = np.round(np.average(data4[x]),2)
-            dataf2 = pd.DataFrame(frame1, index=[1])
-            df_label2 = dataf2.apply(min, axis=0)
-            teks2 = f'Atribut yang memiliki nilai rata-rata terendah adalah kemampuan kompetensi {df_label2.idxmin()} dengan nilai {df_label2.min()}. Ini bisa menjadi langkah untuk BKKLA dalam mencari pelatihan yang sesuai dengan kompetensi alumni dan bisa juga menjadi masukan untuk prodi dalam meningkatkan mata kuliah yang dirasa kurang berdasarkan data RKA'
-
-            # Pengelompokkan kemampuan Kompetensi pada kelompok 1 
-            state['gk'] = pd.DataFrame(df4.groupby(['Prodi','Etika'])['Etika'].count())
-            state['gk'].rename(columns = {'Etika': 'Jumlah Alumni'},inplace=True)
-            state['gk'].sort_values(by='Etika',ascending=True, inplace=True)
-
-            state['gk1'] = pd.DataFrame(df4.groupby(['Prodi','Bahasa_Inggris'])['Bahasa_Inggris'].count())
-            state['gk1'].rename(columns = {'Bahasa_Inggris':'Jumlah Alumni'},inplace=True)
-            state['gk1'].sort_values(by='Bahasa_Inggris',ascending=True, inplace=True)\
             
-            state['gk2'] = pd.DataFrame(df4.groupby(['Prodi','Keahlian_Bidang_Ilmu'])['Keahlian_Bidang_Ilmu'].count())
-            state['gk2'].rename(columns = {'Keahlian_Bidang_Ilmu': 'Jumlah Alumni'},inplace=True)
-            state['gk2'].sort_values(by='Keahlian_Bidang_Ilmu',ascending=True, inplace=True)
+            for i in range(1,input_c+1):
 
-            state['gk3'] = pd.DataFrame(df4.groupby(['Prodi','Penggunaan_Teknologi_Informasi'])['Penggunaan_Teknologi_Informasi'].count())
-            state['gk3'].rename(columns = {'Penggunaan_Teknologi_Informasi': 'Jumlah Alumni'},inplace=True)
-            state['gk3'].sort_values(by='Penggunaan_Teknologi_Informasi',ascending=True, inplace=True)
+                ascending_order = True if i == 1 else False   
+                grup = state['clustering'][state['clustering']['Kelompok'] == i]
+                gk = pd.DataFrame(grup.groupby(['Prodi', 'Etika']).size(), columns=['Jumlah Alumni'])
+                gk = gk.sort_values(by='Etika', ascending=ascending_order)
+                st.write(f"Pengelompokan Etika berdasarkan prodi untuk Kelompok {i}:")
+                st.dataframe(gk)
+                
+                gk1 = pd.DataFrame(grup.groupby(['Prodi', 'Bahasa_Inggris']).size(), columns=['Jumlah Alumni'])
+                gk1 = gk1.sort_values(by='Bahasa_Inggris', ascending=ascending_order)
+                st.write(f"Pengelompokan Bahasa Inggris berdasarkan prodi untuk Kelompok {i}:")
+                st.dataframe(gk1)
+                
+                gk2 = pd.DataFrame(grup.groupby(['Prodi', 'Keahlian_Bidang_Ilmu']).size(), columns=['Jumlah Alumni'])
+                gk2 = gk2.sort_values(by='Keahlian_Bidang_Ilmu', ascending=ascending_order)
+                st.write(f"Pengelompokan Keahlian Bidang Ilmu berdasarkan prodi untuk Kelompok {i}:")
+                st.dataframe(gk2)
+                
+                gk3 = pd.DataFrame(grup.groupby(['Prodi', 'Penggunaan_Teknologi_Informasi']).size(), columns=['Jumlah Alumni'])
+                gk3 = gk3.sort_values(by='Penggunaan_Teknologi_Informasi', ascending=ascending_order)
+                st.write(f"Pengelompokan Penggunaan Teknologi Informasi berdasarkan prodi untuk Kelompok {i}:")
+                st.dataframe(gk3)
+                
+                gk4 = pd.DataFrame(grup.groupby(['Prodi', 'Komunikasi']).size(), columns=['Jumlah Alumni'])
+                gk4 = gk4.sort_values(by='Komunikasi', ascending=ascending_order)
+                st.write(f"Pengelompokan Komunikasi berdasarkan prodi untuk Kelompok {i}:")
+                st.dataframe(gk4)
+                
+                gk5 = pd.DataFrame(grup.groupby(['Prodi', 'Kerjasama_Tim']).size(), columns=['Jumlah Alumni'])
+                gk5 = gk5.sort_values(by='Kerjasama_Tim', ascending=ascending_order)
+                st.write(f"Pengelompokan Kerjasama Tim berdasarkan prodi untuk Kelompok {i}:")
+                st.dataframe(gk5)
+                
+                gk6 = pd.DataFrame(grup.groupby(['Prodi', 'Pengembangan_Diri']).size(), columns=['Jumlah Alumni'])
+                gk6 = gk6.sort_values(by='Pengembangan_Diri', ascending=ascending_order)
+                st.write(f"Pengelompokan Pengembangan Diri berdasarkan prodi untuk Kelompok {i}:")
+                st.dataframe(gk6)
 
-            state['gk4'] = pd.DataFrame(df4.groupby(['Prodi','Komunikasi'])['Komunikasi'].count())
-            state['gk4'].rename(columns = {'Komunikasi': 'Jumlah Alumni'},inplace=True)
-            state['gk4'].sort_values(by='Komunikasi',ascending=True, inplace=True)
+            rekomendasi = []
 
-            state['gk5'] = pd.DataFrame(df4.groupby(['Prodi','Kerjasama_Tim'])['Kerjasama_Tim'].count())
-            state['gk5'].rename(columns = {'Kerjasama_Tim': 'Jumlah Alumni'},inplace=True)
-            state['gk5'].sort_values(by='Kerjasama_Tim',ascending=True, inplace=True)
+            for i in range(1,input_c+1):
+                state['ratadata']["data{0}".format(i)] = state['dfi']["clustering"+str(i+1-1)][['Prodi','Etika','Bahasa_Inggris','Keahlian_Bidang_Ilmu','Penggunaan_Teknologi_Informasi','Komunikasi','Kerjasama_Tim','Pengembangan_Diri']]
+                # st.write(state['ratadata']["data"+str(i+1-1)])
 
-            state['gk6'] = pd.DataFrame(df4.groupby(['Prodi','Pengembangan_Diri'])['Pengembangan_Diri'].count())
-            state['gk6'].rename(columns = {'Pengembangan_Diri': 'Jumlah Alumni'},inplace=True)
-            state['gk6'].sort_values(by='Pengembangan_Diri',ascending=True, inplace=True)
+                etika = str(round(np.average(state['ratadata']["data"+str(i+1-1)]['Etika']),2))
+                bing = str(round(np.average(state['ratadata']["data"+str(i+1-1)]['Bahasa_Inggris']),2))
+                keahlian = str(round(np.average(state['ratadata']["data"+str(i+1-1)]['Keahlian_Bidang_Ilmu']),2))
+                teknologi = str(round(np.average(state['ratadata']["data"+str(i+1-1)]['Penggunaan_Teknologi_Informasi']),2))
+                komunikasi = str(round(np.average(state['ratadata']["data"+str(i+1-1)]['Komunikasi']),2))
+                kerjasama = str(round(np.average(state['ratadata']["data"+str(i+1-1)]['Kerjasama_Tim']),2))
+                pengembangan = str(round(np.average(state['ratadata']["data"+str(i+1-1)]['Pengembangan_Diri']),2))
+
+
+                st.write('Kelompok',i)
+                st.write('Rata-rata kemampuan Etika = ', etika)
+                st.write('Rata-rata kemampuan Bahasa Inggris = ', bing)
+                st.write('Rata-rata kemampuan Keahlian Bidang Ilmu = ', keahlian)
+                st.write('Rata-rata kemampuan Penggunaan Teknologi Informasi = ', teknologi)
+                st.write('Rata-rata kemampuan Komunikasi = ', komunikasi)
+                st.write('Rata-rata kemampuan Kerjasama Tim = ', kerjasama)
+                st.write('Rata-rata kemampuan Pengembangan Diri = ', pengembangan)  
+
+                rowrekomendasi = [bing, keahlian, teknologi, pengembangan, etika, komunikasi, kerjasama, i]
+                rekomendasi.append(rowrekomendasi)
+                state['rekomendasi'] = pd.DataFrame(rekomendasi) 
+
+            state['rekomendasi'].columns = ['a','b','c','d','e','f','g','h']
+            state['rekomendasi'] = state['rekomendasi'].sort_values(by = ['a','b','c','d','e','f','g'], ascending = [True,True,True,True,True,True,True])
+                       
+            bing1 = str(state['rekomendasi']['a'].iloc[0])
+            keahlian1 = str(state['rekomendasi']['b'].iloc[0])
+            teknologi1 = str(state['rekomendasi']['c'].iloc[0])
+            pengembangan1 = str(state['rekomendasi']['d'].iloc[0])
+            etika1 = str(state['rekomendasi']['e'].iloc[0])
+            komunikasi1 = str(state['rekomendasi']['f'].iloc[0])
+            kerjasama1 = str(state['rekomendasi']['g'].iloc[0])
+            kelompok = str(state['rekomendasi']['h'].iloc[0])
+
+
+            #st.table(state['rekomendasi']) 
+            st.write('**Kesimpulan Rekomendasi**')
+            st.write('Kelompok yang kurang dalam kemampuan kompetensinya berada dalam kelompok ',kelompok,'. ', 
+                     'Ini Bisa menjadi perhatian BKKLA untuk bisa membuat pelatihan atau seminar yang sesuai dengan kebutuhan alumni dari masing-masing Prodi yang ada di UNIKOM.')
             
-            # Pengelompokkan kemampuan Kompetensi pada kelompok 2
-            state['gk7'] = pd.DataFrame(df5.groupby(['Prodi','Etika'])['Etika'].count())
-            state['gk7'].rename(columns = {'Etika': 'Jumlah Alumni'},inplace=True)
-            state['gk7'].sort_values(by='Etika',ascending=False, inplace=True)
-
-            state['gk8'] = pd.DataFrame(df5.groupby(['Prodi','Bahasa_Inggris'])['Bahasa_Inggris'].count())
-            state['gk8'].rename(columns = {'Bahasa_Inggris':'Jumlah Alumni'},inplace=True)
-            state['gk8'].sort_values(by='Bahasa_Inggris',ascending=False, inplace=True)
             
-            state['gk9'] = pd.DataFrame(df5.groupby(['Prodi','Keahlian_Bidang_Ilmu'])['Keahlian_Bidang_Ilmu'].count())
-            state['gk9'].rename(columns = {'Keahlian_Bidang_Ilmu': 'Jumlah Alumni'},inplace=True)
-            state['gk9'].sort_values(by='Keahlian_Bidang_Ilmu',ascending=False, inplace=True)
 
-            state['gk10'] = pd.DataFrame(df5.groupby(['Prodi','Penggunaan_Teknologi_Informasi'])['Penggunaan_Teknologi_Informasi'].count())
-            state['gk10'].rename(columns = {'Penggunaan_Teknologi_Informasi': 'Jumlah Alumni'},inplace=True)
-            state['gk10'].sort_values(by='Penggunaan_Teknologi_Informasi',ascending=False, inplace=True)
+            df4 = state['ratadata']["data"+kelompok]
 
-            state['gk11'] = pd.DataFrame(df5.groupby(['Prodi','Komunikasi'])['Komunikasi'].count())
-            state['gk11'].rename(columns = {'Komunikasi': 'Jumlah Alumni'},inplace=True)
-            state['gk11'].sort_values(by='Komunikasi',ascending=False, inplace=True)
-
-            state['gk12'] = pd.DataFrame(df5.groupby(['Prodi','Kerjasama_Tim'])['Kerjasama_Tim'].count())
-            state['gk12'].rename(columns = {'Kerjasama_Tim': 'Jumlah Alumni'},inplace=True)
-            state['gk12'].sort_values(by='Kerjasama_Tim',ascending=False, inplace=True)
-
-            state['gk13'] = pd.DataFrame(df5.groupby(['Prodi','Pengembangan_Diri'])['Pengembangan_Diri'].count())
-            state['gk13'].rename(columns = {'Pengembangan_Diri': 'Jumlah Alumni'},inplace=True)
-            state['gk13'].sort_values(by='Pengembangan_Diri',ascending=False, inplace=True)
-            
             
             informatikaS12 = df4[df4['Prodi'] == 'Teknik Informatika S1']
             sisinfS12 = df4[df4['Prodi'] == 'Sistem Informasi S1']
@@ -746,42 +748,6 @@ def show_cluster():
             maka36 = pd.DataFrame(pengeluaran36, columns=['Kemampuan', 'Nilai'])
 
 
-            #Hasil Cluster
-            st.write("Tabel dengan karakteristik Kelompok 1")
-            st.dataframe(df4[(df4['Pengembangan_Diri'] < 3) | (df4['Bahasa_Inggris'] < 3)])
-
-            st.write("Tabel dengan karakteristik Kelompok 2")
-            st.dataframe(df5[(df5['Pengembangan_Diri'] >= 3) & (df5['Penggunaan_Teknologi_Informasi'] >= 3)])
-
-            st.write("Tabel Pengelompokkan Kemampuan Kompetensi Alumni dari kolom Program Studi untuk Kelompok 1")
-            st.dataframe(state['gk'])
-            st.dataframe(state['gk1'])
-            st.dataframe(state['gk2'])
-            st.dataframe(state['gk3'])
-            st.dataframe(state['gk4'])
-            st.dataframe(state['gk5'])
-            st.dataframe(state['gk6'])
-
-
-            st.write("Tabel Pengelompokkan Kemampuan Kompetensi Alumni dari kolom Program Studi untuk Kelompok 2")
-            st.dataframe(state['gk7'])
-            st.dataframe(state['gk8'])
-            st.dataframe(state['gk9'])
-            st.dataframe(state['gk10'])
-            st.dataframe(state['gk11'])
-            st.dataframe(state['gk12'])
-            st.dataframe(state['gk13'])
-
-            for i in range(len(np.unique(state['clustering']['Kelompok']))):
-                st.write('Dari hasil pengelompokkan didapatkan nilai rata-rata kemampuan kompetensi pada Kelompok',i+1,'sebagai berikut: ')
-                for x,y in zip(dataf1,dataf2):
-                    if i == 0 :
-                        st.write('- Atribut',x,'dengan nilai', dataf1[x].values[0])
-                    elif i == 1:
-                        st.write('- Atribut',y,'dengan nilai', dataf2[y].values[0])
-
-            st.write('Dari hasil kelompok ',i,i+1,'nilai rata-rata terendah adalah kemampuan kompetensi',df_label2.idxmin(),'. hasil ini bisa menjadi langkah BKKLA dalam mencari pelatihan yang sesuai dengan kompetensi alumni dan bisa juga menjadi masukan untuk prodi dalam meningkatkan mata kuliah yang dirasa kurang berdasarkan data RKA')
-            
             fig = go.Figure()
             fig.add_trace(go.Scatterpolar(
                 r=maka28['Nilai'],
@@ -1046,7 +1012,7 @@ def menu_clustering():
         if st.button('Mulai Clustering'):
             clustering_data(input_c)
         if not state['dataset'].empty:
-            show_cluster()
+            show_cluster(input_c)
             df_xlsx = to_excel(state['clustering'])
             st.download_button(label='Download Hasil Clustering',
                                             data=df_xlsx ,

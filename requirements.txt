@@ -7,3 +7,4 @@ scipy==1.9.1
 scikit-learn==1.0.2
 openpyxl==3.0.10
 xlsxwriter==3.0.3
+plotly==5.9.0

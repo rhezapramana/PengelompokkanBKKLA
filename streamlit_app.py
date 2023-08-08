@@ -320,7 +320,6 @@ def show_null_count():
 def DBI():
     if not state['dataset'].empty:
         # Memilih Atribut yang ingin digunakan pada DBI
-        df1 = 2
         state['x'] = state['dataset'].iloc[:,4:13]
         scaler = StandardScaler()
         data1_scaled = scaler.fit_transform(state['x'])
@@ -329,7 +328,7 @@ def DBI():
         # Perhitungan Evaluasi DBI
         result2 = {}
 
-        for i in range(2, 10):
+        for i in range(2, 3):
             kmeans = KMeans(n_clusters=i, random_state=30)
             labels = kmeans.fit_predict(data1_scaled)
             db_index = davies_bouldin_score(data1_scaled, labels)
@@ -337,7 +336,7 @@ def DBI():
         result3 = pd.DataFrame(result2.values(), result2.keys())
         df = result3.idxmin().min()
 
-        st.write("Dari data didapatkan rekomendasi pengelompokkan sebanyak ",df1," Kelompok") 
+        st.write("Dari data didapatkan rekomendasi pengelompokkan sebanyak ",df," Kelompok") 
      
         
 

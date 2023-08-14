@@ -298,6 +298,8 @@ def preprocessing_data():
 
         state['dataset'] = result1
 
+        state['dataset'].drop(columns='Informasi', inplace=True)
+
         # Mereset index
         state['dataset'].reset_index(inplace=True, drop=True)
         st.success("Nilai Null Berhasil Dihapus!")
@@ -462,7 +464,6 @@ def show_cluster(input_c):
             st.write('**Kesimpulan Rekomendasi**')
             st.write('Kelompok yang kurang dalam kemampuan kompetensinya berada dalam kelompok ',kelompok,'. ', 
                      'Ini Bisa menjadi perhatian BKKLA untuk bisa membuat pelatihan atau seminar yang sesuai dengan kebutuhan alumni dari masing-masing Prodi yang ada di UNIKOM.')
-            
             
 
             df4 = state['ratadata']["data"+kelompok]

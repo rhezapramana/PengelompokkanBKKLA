@@ -42,17 +42,19 @@ def import_data():
             RKA = pd.read_excel(uploaded_file)
             data = RKA
             #data.index = data.index+1
-            data = data[data['Jenjang'] == 'S1']
+            #data = data[data['Jenjang'] == 'S1']
             data.reset_index(inplace=True)
             data.index = data.index + 1
             data = data.replace(0, pd.np.nan)
             data[['nimhsmsmh','tahun_lulus']] = data[['nimhsmsmh','tahun_lulus']].astype(str)
             df1 = data[['nimhsmsmh','nmmhsmsmh','tahun_lulus','f1761','f1763','f1765','f1767','f1769','f1771','f1773']]
             df2 = df1.rename(columns = {'nimhsmsmh':'NIM','nmmhsmsmh':'Nama',
-                                         'f1761':'Etika','f1763':'Keahlian_Bidang_Ilmu',
+                                         'f1761':'Etika',
+                                         'f1763':'Keahlian_Bidang_Ilmu',
                                          'f1765':'Bahasa_Inggris',
                                          'f1767':'Penggunaan_Teknologi_Informasi',
-                                         'f1769':'Komunikasi','f1771':'Kerjasama_Tim',
+                                         'f1769':'Komunikasi',
+                                         'f1771':'Kerjasama_Tim',
                                          'f1773':'Pengembangan_Diri'})
             kolomdanbaris = df2.shape
         

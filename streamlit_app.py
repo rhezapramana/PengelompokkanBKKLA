@@ -47,7 +47,7 @@ def import_data():
             data.index = data.index + 1
             data = data.replace(0, pd.np.nan)
             data[['nimhsmsmh','tahun_lulus']] = data[['nimhsmsmh','tahun_lulus']].astype(str)
-            df1 = data[['nimhsmsmh','nmmhsmsmh','Prodi','tahun_lulus','f1761','f1763','f1765','f1767','f1769','f1771','f1773']]
+            df1 = data[['nimhsmsmh','nmmhsmsmh','tahun_lulus','f1761','f1763','f1765','f1767','f1769','f1771','f1773']]
             df2 = df1.rename(columns = {'nimhsmsmh':'NIM','nmmhsmsmh':'Nama',
                                          'f1761':'Etika','f1763':'Keahlian_Bidang_Ilmu',
                                          'f1765':'Bahasa_Inggris',
